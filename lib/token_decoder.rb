@@ -32,7 +32,7 @@ module TokenDecoder
       def cert_file_name(use_secondary_cert = false)
         secondary_name = use_secondary_cert ? "_secondary" : ""
         case self.environment
-        when 'test', 'qa', 'development', 'beta'
+        when 'test', 'qa', 'development'
           "nfg_qa#{ secondary_name }.cer"
         else
           "nfg_production#{ secondary_name }.cer"
