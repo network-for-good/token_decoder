@@ -1,35 +1,13 @@
 # TokenDecoder
+## Using public/private keys
+This token will have to have been produced using a private primary or secondary key that relates to the public keys stored in the public_key_certs folder.
 
-Welcome to your new gem! In this directory, you'll find the files you need to be able to package up your Ruby library into a gem. Put your Ruby code in the file `lib/token_decoder`. To experiment with that code, run `bin/console` for an interactive prompt.
+There is a primary and secondar for production and another set for all other environments.
 
-TODO: Delete this and the text above, and describe your gem
+## Using a hmac_secret
+This token must have been generated using a shared hmac_secret.
 
-## Installation
+This secret must have been set as a class instance variable on the TokenDecoder class on initialization.
 
-Add this line to your application's Gemfile:
-
-```ruby
-gem 'token_decoder'
-```
-
-And then execute:
-
-    $ bundle
-
-Or install it yourself as:
-
-    $ gem install token_decoder
-
-## Usage
-
-TODO: Write usage instructions here
-
-## Development
-
-After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake spec` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
-
-To install this gem onto your local machine, run `bundle exec rake install`. To release a new version, update the version number in `version.rb`, and then run `bundle exec rake release`, which will create a git tag for the version, push git commits and tags, and push the `.gem` file to [rubygems.org](https://rubygems.org).
-
-## Contributing
-
-Bug reports and pull requests are welcome on GitHub at https://github.com/lordzork/token_decoder.
+An example of this assignment is below.
+`TokenDecoder::Decoder.hmac_secret = APP_CONFIG[:hmac_secret]`
