@@ -8,16 +8,23 @@ module TokenDecoder
     require "jwt"
 
     class << self
-      attr_accessor :environment
+      attr_accessor :environment, :hmac_secret
 
       def decode(token, environment)
         self.environment = environment
         options = { algorithm: 'RS256' }
 
         begin
+          # first decode using the primary key
           JWT.decode(token, public_key, true, options)
-        rescue
-          JWT.decode(token, public_key(true), true, options)
+        rescue StandardError
+          begin
+            # then decode using the secondary key
+            JWT.decode(token, public_key(true), true, options)
+          rescue StandardError
+            # now attempt to decode using the hmac_secret
+            JWT.decode(token, (hmac_secret || ''), true, algorithm: 'HS256')
+          end
         end
       end
 
@@ -31,11 +38,11 @@ module TokenDecoder
 
       def cert_file_name(use_secondary_cert = false)
         secondary_name = use_secondary_cert ? "_secondary" : ""
-        case self.environment
+        case environment
         when 'test', 'qa', 'development'
-          "nfg_qa#{ secondary_name }.cer"
+          "nfg_qa#{secondary_name}.cer"
         else
-          "nfg_production#{ secondary_name }.cer"
+          "nfg_production#{secondary_name}.cer"
         end
       end
 
@@ -43,6 +50,5 @@ module TokenDecoder
         OpenSSL::X509::Certificate.new(File.read(cert_file_path(use_secondary_cert)))
       end
     end
-
   end
 end
