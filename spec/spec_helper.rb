@@ -1,5 +1,7 @@
 require "bundler/setup"
+require 'byebug'
 require "token_decoder"
+require "timecop"
 
 RSpec.configure do |config|
   # Enable flags like --only-failures and --next-failure
