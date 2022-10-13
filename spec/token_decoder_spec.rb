@@ -97,8 +97,6 @@ describe TokenDecoder::Decoder do
   end
 
   describe ".decode" do
-    #let(:decoded_token) { JWT.decode(token, public_key, true, { algorithm: "RS256" }) }
-
     context "when decoding succeeds" do
       let(:decoded_token) { "XYZ" }
 
