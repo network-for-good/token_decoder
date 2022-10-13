@@ -104,8 +104,7 @@ describe TokenDecoder::Decoder do
       
       describe "in qa" do
         let(:environment) { "qa" }
-        
-        # it { byebug }
+
         context "when the token was generated from a primary certificate" do
           let!(:token) { tokens['qa']['primary'] }
           let(:file_name) { 'nfg_qa.cer' }
