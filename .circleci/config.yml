@@ -33,9 +33,6 @@ jobs:
           command: |
             bundle install --jobs=4 --retry=3 --path vendor/bundle
 
-      # Database setup
-      - run: bundle exec rake db:drop db:create db:migrate
-
       # run tests!
       - run:
           name: run tests
