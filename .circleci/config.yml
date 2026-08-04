@@ -9,7 +9,7 @@ jobs:
       - image: cimg/ruby:3.4.2-browsers
         environment:
           PGHOST: 127.0.0.1
-      - image: cimg/postgres:11.5
+      - image: cimg/postgres:11.12
         environment:
           POSTGRES_HOST_AUTH_METHOD: trust
       - image: cimg/redis:7.4
