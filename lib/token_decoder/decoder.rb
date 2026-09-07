@@ -21,8 +21,8 @@ module TokenDecoder
             JWT.decode(token, public_key(true), true, options)
           rescue StandardError
             # now attempt to decode using the hmac_secret. Do not fall back to an
-            # empty string when hmac_secret is unset: CVE-2026-45363 (GHSA-c32j-vqhx-rx3x)
-            # is an empty-key HMAC verification bypass, and JWT.decode(token, '', ...)
+            # empty string when hmac_secret is unset: CVE-2026-45363 is an empty-key
+            # HMAC verification bypass, and JWT.decode(token, '', ...)
             # is exactly that condition on JWT gems affected by it. An unset hmac_secret
             # means this app does not use the HMAC path (see config/initializers in
             # consuming apps), so fail closed instead of silently trying one.
