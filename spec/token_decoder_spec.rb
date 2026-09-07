@@ -176,5 +176,29 @@ describe TokenDecoder::Decoder do
         expect(subject).to eq(decoded_token)
       end
     end
+
+    context "when hmac_secret is not configured (CVE-2026-45363 regression check)" do
+      before { described_class.hmac_secret = nil }
+
+      # Any token that fails both RS256 attempts reaches the HMAC fallback branch --
+      # reusing the same fixture as the "invalid token" case above, since the point
+      # of this test is that the guard fires *before* any HMAC verification is
+      # attempted at all, regardless of what the forged signature bytes are.
+      # Asserting on the specific message (not just the exception class) matters:
+      # JWT::DecodeError is a shared class other things also raise, and an earlier,
+      # looser version of this test (asserting only `raise_error(JWT::DecodeError)`
+      # with a JWT.encode-constructed token) passed identically against the
+      # *unpatched* decoder.rb too, because JWT gem >= 3.2 raises that same class
+      # from JWT.encode itself when given an empty key -- proving nothing about
+      # this gem's own fix. This version fails without the fix and passes with it.
+      let(:token) { "invalidtokenKV1QiLCJhbGciOiJSUzI1NiIsIng1dCI6Ik1RdjVzaDZ6ZElvb3l2eHFER2M1c2dOVWdUUSIsImtpZCI6Ik1RdjVzaDZ6ZElvb3l2eHFER2M1c2dOVWdUUSJ9.eyJpc3MiOiJodHRwczovL2lkZW50aXR5LXFhMDUubmZnaHEub3JnIiwiYXVkIjoiaHR0cHM6Ly9pZGVudGl0eS1xYTA1Lm5mZ2hxLm9yZy9yZXNvdXJjZXMiLCJleHAiOjE2MzQ1OTgwNDksIm5iZiI6MTQ3NjgxMDA0OSwiY2xpZW50X2lkIjoiTmdmVDNzdGlEIn0.i2fyyPJq_ko8HBJxChrH7upV4lDu1vAba6EToQvznoAaMwrJkoGdKp78LtyAxpKtZVItR8mEH97XcFmZxiTY9Vof3ShWFLtPjzzVyxM3pjNQuzzzEJTgA7Vm4-dGGue4cm4JMsqhuW6h_c8JAHISHnscjguTsx6wNldykLPAEFniUMLo_c_WF1GenRAM0xGiqjz3wmugJ7KFsrl4_8WW6-GzfEyMp5CRNjyeiUs9_aL5Z2qDfvIo0ewWf6Hr7Cz0CYZxHeWtbazx2nZU10UQuhi5LMwN-65NRrSAaQeuUlBZWVvrau5HYKcA5PbKEH_g4ME1Hy-WwZpahvTJQ7gpqA" }
+      let(:environment) { "qa" }
+
+      subject { described_class.decode(token, environment) }
+
+      it "raises with a message identifying the unconfigured hmac_secret, not a coincidental error" do
+        expect { subject }.to raise_error(JWT::DecodeError, /hmac_secret is not configured/)
+      end
+    end
   end
 end
