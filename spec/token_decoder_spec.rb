@@ -178,8 +178,6 @@ describe TokenDecoder::Decoder do
     end
 
     context "when hmac_secret is not configured (CVE-2026-45363 regression check)" do
-      before { described_class.hmac_secret = nil }
-
       # Any token that fails both RS256 attempts reaches the HMAC fallback branch --
       # reusing the same fixture as the "invalid token" case above, since the point
       # of this test is that the guard fires *before* any HMAC verification is
@@ -196,8 +194,18 @@ describe TokenDecoder::Decoder do
 
       subject { described_class.decode(token, environment) }
 
-      it "raises with a message identifying the unconfigured hmac_secret, not a coincidental error" do
-        expect { subject }.to raise_error(JWT::DecodeError, /hmac_secret is not configured/)
+      # Both halves of the guard (`nil?` and `empty?`) need their own case: an
+      # explicitly configured empty string must fail closed exactly like an
+      # unset secret, otherwise dropping the `empty?` check would reintroduce
+      # the empty-key HMAC path while the nil case still passed.
+      { "nil" => nil, "an empty string" => "" }.each do |description, unconfigured_secret|
+        context "and hmac_secret is #{description}" do
+          before { described_class.hmac_secret = unconfigured_secret }
+
+          it "raises with a message identifying the unconfigured hmac_secret, not a coincidental error" do
+            expect { subject }.to raise_error(JWT::DecodeError, /hmac_secret is not configured/)
+          end
+        end
       end
     end
   end
