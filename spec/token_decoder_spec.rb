@@ -9,7 +9,17 @@ describe TokenDecoder::Decoder do
   let(:cert_file_path) { File.join(Gem::Specification.find_by_name("token_decoder").gem_dir, 'lib', 'token_decoder', 'public_key_certs', file_name) }
   let(:certificate) { OpenSSL::X509::Certificate.new(File.read(cert_file_path)) }
   let(:file_name) { 'nfg_production.cer' }
-  
+
+  after { described_class.hmac_secret = nil }
+
+  # Built by hand because newer versions of the jwt gem refuse to sign with an
+  # empty key; older versions (still used by some consumers) do not.
+  def empty_key_hs256_token
+    b64 = ->(str) { Base64.urlsafe_encode64(str, padding: false) }
+    signing_input = [b64.call({ alg: 'HS256', typ: 'JWT' }.to_json), b64.call({ app_id: 'evo' }.to_json)].join('.')
+    "#{signing_input}.#{b64.call(OpenSSL::HMAC.digest('SHA256', '', signing_input))}"
+  end
+
   describe ".certificate" do
     subject { described_class.certificate }
 
@@ -174,6 +184,38 @@ describe TokenDecoder::Decoder do
       it "returns a decoded token" do
         described_class.hmac_secret = hmac_secret
         expect(subject).to eq(decoded_token)
+      end
+    end
+
+    context "when no hmac_secret is configured" do
+      let(:environment) { "qa" }
+
+      [nil, "", "   "].each do |unset_secret|
+        context "and hmac_secret is #{unset_secret.inspect}" do
+          before { described_class.hmac_secret = unset_secret }
+
+          it "rejects an HS256 token signed with an empty key" do
+            token = empty_key_hs256_token
+            expect { described_class.decode(token, environment) }.to raise_error(JWT::DecodeError)
+          end
+
+          it "does not attempt the HS256 fallback" do
+            allow(JWT).to receive(:decode).and_call_original
+            expect { described_class.decode(empty_key_hs256_token, environment) }.to raise_error(JWT::DecodeError)
+            expect(JWT).not_to have_received(:decode).with(anything, anything, true, algorithm: 'HS256')
+          end
+        end
+      end
+    end
+
+    context "when an HS256 token is signed with the wrong secret" do
+      let(:environment) { "qa" }
+
+      before { described_class.hmac_secret = 'configured-secret-value-0123456789abcdef' }
+
+      it "rejects the token" do
+        token = empty_key_hs256_token
+        expect { described_class.decode(token, environment) }.to raise_error(JWT::DecodeError)
       end
     end
   end

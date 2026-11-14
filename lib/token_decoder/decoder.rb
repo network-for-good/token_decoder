@@ -19,11 +19,18 @@ module TokenDecoder
           begin
             # then decode using the secondary key
             JWT.decode(token, public_key(true), true, options)
-          rescue StandardError
-            # now attempt to decode using the hmac_secret
-            JWT.decode(token, (hmac_secret || ''), true, algorithm: 'HS256')
+          rescue StandardError => e
+            # Fail closed: never fall back to HS256 without a configured secret,
+            # otherwise a token signed with an empty key would be accepted.
+            raise e unless hmac_secret_configured?
+
+            JWT.decode(token, hmac_secret, true, algorithm: 'HS256')
           end
         end
+      end
+
+      def hmac_secret_configured?
+        !hmac_secret.nil? && !hmac_secret.to_s.strip.empty?
       end
 
       def public_key(use_secondary_cert = false)
