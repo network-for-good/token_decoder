@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    token_decoder (0.1.1)
+    token_decoder (0.2.0)
       jwt (>= 2.7)
 
 GEM
@@ -62,7 +62,7 @@ CHECKSUMS
   rspec-support (3.13.7) sha256=0640e5570872aafefd79867901deeeeb40b0c9875a36b983d85f54fb7381c47c
   rspec_junit_formatter (0.6.0) sha256=40dde674e6ae4e6cc0ff560da25497677e34fefd2338cc467a8972f602b62b15
   timecop (0.9.11) sha256=41284dc6e5041f2184f781ace766f942108c842f8d8c1386a26e6343decc7542
-  token_decoder (0.1.1)
+  token_decoder (0.2.0)
 
 BUNDLED WITH
   4.0.4

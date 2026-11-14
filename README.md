@@ -11,3 +11,8 @@ This secret must have been set as a class instance variable on the TokenDecoder 
 
 An example of this assignment is below.
 `TokenDecoder::Decoder.hmac_secret = APP_CONFIG[:hmac_secret]`
+**As of 0.2.0** the HS256 fallback only runs when `hmac_secret` is set to a non-blank value. If no secret is configured, tokens that fail RS256 verification raise `JWT::DecodeError` instead of being checked against an empty key.
+
+## Changelog
+
+- **0.2.0** – HS256 fallback is skipped (decoding fails closed) when `hmac_secret` is nil or blank.
