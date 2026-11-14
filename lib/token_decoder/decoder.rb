@@ -15,14 +15,16 @@ module TokenDecoder
         begin
           # first decode using the primary key
           JWT.decode(token, public_key, true, options)
-        rescue StandardError
+        rescue StandardError => primary_error
           begin
             # then decode using the secondary key
             JWT.decode(token, public_key(true), true, options)
-          rescue StandardError => e
+          rescue StandardError
             # Fail closed: never fall back to HS256 without a configured secret,
             # otherwise a token signed with an empty key would be accepted.
-            raise e unless hmac_secret_configured?
+            # Re-raise the primary-cert error so callers can still tell an
+            # expired token from a forged one.
+            raise primary_error unless hmac_secret_configured?
 
             JWT.decode(token, hmac_secret, true, algorithm: 'HS256')
           end

@@ -202,9 +202,19 @@ describe TokenDecoder::Decoder do
           it "does not attempt the HS256 fallback" do
             allow(JWT).to receive(:decode).and_call_original
             expect { described_class.decode(empty_key_hs256_token, environment) }.to raise_error(JWT::DecodeError)
-            expect(JWT).not_to have_received(:decode).with(anything, anything, true, algorithm: 'HS256')
+            expect(JWT).not_to have_received(:decode).with(anything, anything, true, hash_including(algorithm: 'HS256'))
           end
         end
+      end
+    end
+
+    context "when an expired RS256 token fails and no hmac_secret is configured" do
+      let(:environment) { "qa" }
+
+      it "re-raises the primary certificate error" do
+        errors = [JWT::ExpiredSignature, JWT::VerificationError]
+        allow(JWT).to receive(:decode) { raise errors.shift || JWT::DecodeError }
+        expect { described_class.decode('token', environment) }.to raise_error(JWT::ExpiredSignature)
       end
     end
 
